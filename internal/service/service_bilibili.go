@@ -2,6 +2,7 @@ package service
 
 import (
 	"error_bot/internal/dao"
+	"error_bot/internal/types"
 	"error_bot/internal/user"
 	"fmt"
 	"golang.org/x/net/context"
@@ -17,44 +18,46 @@ func StartBiliBiliService() {
 	}
 
 	for _, info := range infos {
-		object, ok := user.Objects.Load(info.UserID)
-		if ok {
-			object.(*user.Class).Groups = append(object.(*user.Class).Groups, &user.Group{
-				Id:                info.GroupID,
-				AtAll:             info.AtAll,
-				LiveNotification:  info.LiveNotification,
-				SpaceNotification: info.SpaceNotification,
-			})
-		}
+		CreateObject(info)
+	}
+}
 
-		if !ok {
-			newObject := &user.Class{
-				Name:   info.Name,
-				Uid:    info.UserID,
-				RoomId: info.RoomID,
-				Groups: make([]*user.Group, 0),
-			}
-
-			newObject.Groups = append(newObject.Groups, &user.Group{
-				Id:    info.GroupID,
-				AtAll: info.AtAll,
-			})
-		}
+func CreateObject(info *types.BilibiliService) {
+	object, ok := user.Objects.Load(info.UserID)
+	if ok {
+		object.(*user.Class).Groups = append(object.(*user.Class).Groups, &user.Group{
+			Id:                info.GroupID,
+			AtAll:             info.AtAll,
+			LiveNotification:  info.LiveNotification,
+			SpaceNotification: info.SpaceNotification,
+		})
 	}
 
-	user.Objects.Range(func(key, value any) bool {
-		obj := value.(*user.Class)
+	if !ok {
+		newObject := &user.Class{
+			Name:   info.Name,
+			Uid:    info.UserID,
+			RoomId: info.RoomID,
+			Groups: make([]*user.Group, 0),
+		}
 
-		ctxLive, cancelLive := context.WithCancel(context.Background())
-		keyOfLive := fmt.Sprintf("%d_live", obj.Uid)
-		user.Cancels.Store(keyOfLive, cancelLive)
+		newObject.Groups = append(newObject.Groups, &user.Group{
+			Id:    info.GroupID,
+			AtAll: info.AtAll,
+		})
 
-		ctxDynamic, cancelDynamic := context.WithCancel(context.Background())
-		keyOfDynamic := fmt.Sprintf("%d_dynamic", obj.Uid)
-		user.Cancels.Store(keyOfDynamic, cancelDynamic)
+		object = newObject
+	}
 
-		go value.(*user.Class).ListenBiliBiliLiveNotification(ctxLive)
-		go value.(*user.Class).ListenBiliBiliSpaceNotification(ctxDynamic)
-		return true
-	})
+	keyOfLive := fmt.Sprintf("%d_live", object.(*user.Class).Uid)
+	if v, ok := user.Cancels.Load(keyOfLive); ok {
+		v.(context.CancelFunc)()
+	}
+
+	keyOfDynamic := fmt.Sprintf("%d_dynamic", object.(*user.Class).Uid)
+	if v, ok := user.Cancels.Load(keyOfDynamic); ok {
+		v.(context.CancelFunc)()
+	}
+
+	object.(*user.Class).StartNewService()
 }

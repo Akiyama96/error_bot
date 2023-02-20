@@ -3,6 +3,7 @@ package user
 import (
 	"context"
 	"encoding/json"
+	"error_bot/config"
 	"error_bot/internal/bot"
 	"error_bot/internal/client"
 	"error_bot/internal/types"
@@ -39,13 +40,26 @@ const (
 	liveRoomInfoUrl = "https://api.live.bilibili.com/room/v1/Room/get_info?room_id="
 	//statInfoUrl     = "https://api.bilibili.com/x/relation/stat?vmid="
 	spaceInfoUrl = "https://api.bilibili.com/x/polymer/web-dynamic/v1/feed/space"
-	//userInfoUrl  = "https://api.bilibili.com/x/web-interface/card?mid="
+	userInfoUrl  = "https://api.bilibili.com/x/web-interface/card?mid="
 )
 
 var (
 	Objects sync.Map
 	Cancels sync.Map
 )
+
+func (c *Class) StartNewService() {
+	ctxLive, cancelLive := context.WithCancel(context.Background())
+	keyOfLive := fmt.Sprintf("%d_live", c.Uid)
+	Cancels.Store(keyOfLive, cancelLive)
+
+	ctxDynamic, cancelDynamic := context.WithCancel(context.Background())
+	keyOfDynamic := fmt.Sprintf("%d_dynamic", c.Uid)
+	Cancels.Store(keyOfDynamic, cancelDynamic)
+
+	go c.ListenBiliBiliLiveNotification(ctxLive)
+	go c.ListenBiliBiliSpaceNotification(ctxDynamic)
+}
 
 func (c *Class) ListenBiliBiliLiveNotification(ctx context.Context) {
 	syncgroup.Wait.Add(1)
@@ -57,6 +71,7 @@ func (c *Class) ListenBiliBiliLiveNotification(ctx context.Context) {
 		select {
 		case <-ctx.Done():
 			log.Println("INFO: bilibili live service returned, context done.")
+			bot.SendMessage(config.Content.BotServerConfig.QQ, "private", fmt.Sprintf("INFO: bilibili live service returned, context done.\n Uid:%d", c.Uid))
 			return
 		case <-ticker.C:
 			liveInfo := GetLiveRoomInfo(ctx, c.RoomId)
@@ -194,6 +209,7 @@ func (c *Class) ListenBiliBiliSpaceNotification(ctx context.Context) {
 		select {
 		case <-ctx.Done():
 			log.Println("INFO: bilibili space service returned, context done.")
+			bot.SendMessage(config.Content.BotServerConfig.QQ, "private", fmt.Sprintf("INFO: bilibili space service returned, context done.\n Uid:%d", c.Uid))
 			return
 		case <-ticker.C:
 			dynamicInfo := GetDynamicInfo(ctx, c.Uid)
@@ -403,25 +419,25 @@ func GetDynamicInfo(ctx context.Context, uid int) *types.SpaceInfo {
 	return dynamicInfo
 }
 
-//func getUserInfo(ctx context.Context, uid int) *types.BilibiliUserInfo {
-//	url := fmt.Sprintf("%s%d", userInfoUrl, uid)
-//	response := client.Get(ctx, url)
-//	if response == nil {
-//		log.Println("ERROR: failed to get user info, nil response.")
-//		return nil
-//	}
-//
-//	userInfo := &types.BilibiliUserInfo{}
-//	err := json.Unmarshal(response.ReadAll(), userInfo)
-//	if err != nil {
-//		log.Println(fmt.Sprintf("ERROR: failed to get user info, err(%s).", err))
-//		return nil
-//	}
-//
-//	if userInfo.Code != 0 {
-//		log.Println("ERROR: failed to get user info, code not 0.")
-//		return nil
-//	}
-//
-//	return userInfo
-//}
+func GetUserInfo(ctx context.Context, uid int) *types.BilibiliUserInfo {
+	url := fmt.Sprintf("%s%d", userInfoUrl, uid)
+	response := client.Get(ctx, url)
+	if response == nil {
+		log.Println("ERROR: failed to get user info, nil response.")
+		return nil
+	}
+
+	userInfo := &types.BilibiliUserInfo{}
+	err := json.Unmarshal(response.ReadAll(), userInfo)
+	if err != nil {
+		log.Println(fmt.Sprintf("ERROR: failed to get user info, err(%s).", err))
+		return nil
+	}
+
+	if userInfo.Code != 0 {
+		log.Println("ERROR: failed to get user info, code not 0.")
+		return nil
+	}
+
+	return userInfo
+}

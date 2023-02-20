@@ -378,4 +378,5 @@ type BilibiliService struct {
 	LiveNotification  int    `json:"live_notification"`
 	SpaceNotification int    `json:"space_notification"`
 	AtAll             int    `json:"at_all"`
+	Enable            int    `json:"enable"`
 }

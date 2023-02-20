@@ -13,6 +13,7 @@ import (
 	"github.com/gogf/gf/v2/util/gconv"
 	"io"
 	"log"
+	"strings"
 )
 
 // EventService 监听QQ事件
@@ -58,6 +59,11 @@ func handleMessage(event *types.Event) {
 	switch event.MessageType {
 	case "group":
 	case "private":
+		if len(event.Message) > 5 && event.Message[:8] == "config:" {
+			event.Message = strings.Replace(event.Message, "config:", "", -1)
+			ReplaceServiceConfig(event)
+			return
+		}
 		bot.SendMessage(event.Sender.UserId, "private", RequestXiaoAi(event.Message))
 	}
 }
@@ -98,7 +104,7 @@ func getLiveStatus(data map[string]interface{}) map[string]interface{} {
 
 	roomInfo := user.GetLiveRoomInfo(context.Background(), roomId)
 	if roomInfo == nil {
-		log.Println("INFO: nil  live room info")
+		log.Println("INFO: nil live room info")
 		return nil
 	}
 

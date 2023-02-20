@@ -1,15 +1,15 @@
 package service
 
 import (
-	"context"
 	"error_bot/internal/dao"
 	"error_bot/internal/user"
 	"fmt"
+	"golang.org/x/net/context"
 	"log"
 )
 
 // StartBiliBiliService 开始监听BiliBili的账号状态
-func StartBiliBiliService(ctx context.Context) {
+func StartBiliBiliService() {
 	infos, err := dao.GetServiceInfo()
 	if err != nil {
 		log.Println(fmt.Sprintf("ERROR: failed to get service info, err(%s)", err))
@@ -20,8 +20,10 @@ func StartBiliBiliService(ctx context.Context) {
 		object, ok := user.Objects.Load(info.UserID)
 		if ok {
 			object.(*user.Class).Groups = append(object.(*user.Class).Groups, &user.Group{
-				Id:    info.GroupID,
-				AtAll: info.AtAll,
+				Id:                info.GroupID,
+				AtAll:             info.AtAll,
+				LiveNotification:  info.LiveNotification,
+				SpaceNotification: info.SpaceNotification,
 			})
 		}
 
@@ -41,7 +43,18 @@ func StartBiliBiliService(ctx context.Context) {
 	}
 
 	user.Objects.Range(func(key, value any) bool {
-		// TODO
+		obj := value.(*user.Class)
+
+		ctxLive, cancelLive := context.WithCancel(context.Background())
+		keyOfLive := fmt.Sprintf("%d_live", obj.Uid)
+		user.Cancels.Store(keyOfLive, cancelLive)
+
+		ctxDynamic, cancelDynamic := context.WithCancel(context.Background())
+		keyOfDynamic := fmt.Sprintf("%d_dynamic", obj.Uid)
+		user.Cancels.Store(keyOfDynamic, cancelDynamic)
+
+		value.(*user.Class).ListenBiliBiliLiveNotification(ctxLive)
+		value.(*user.Class).ListenBiliBiliSpaceNotification(ctxDynamic)
 		return true
 	})
 }

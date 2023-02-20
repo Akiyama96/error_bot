@@ -29,3 +29,8 @@ type Event struct {
 	Comment    string `json:"comment"`
 	Flag       string `json:"flag"`
 }
+
+type Manage struct {
+	Operation string                 `json:"operation"`
+	Data      map[string]interface{} `json:"data"`
+}

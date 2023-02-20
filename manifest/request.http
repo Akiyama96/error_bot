@@ -5,3 +5,15 @@ Content-Type: application/json
 {
   "Font": 1
 }
+
+### Manage
+POST http://localhost:5701/api/manage
+Content-Type: application/json
+
+{
+  "operation": "getLastDynamic",
+  "data": {
+    "uid": 387636363
+  }
+}
+

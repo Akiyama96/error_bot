@@ -10,11 +10,11 @@ database:
     file: "{Y-m-d}-sql.log"        # 日志文件格式。默认为"{Y-m-d}.log"
     stdout: false
   default:
-    host: "47.243.169.233"         # 地址
+    host: "124.223.113.24"         # 地址
     port: "3306"                   # 端口
-    user: "qq_bot"                 # 账号
+    user: "error_bot"                 # 账号
     pass: "Akiyamamio96"           # 密码
-    name: "qq_bot"                 # 数据库名称
+    name: "error_bot"                 # 数据库名称
     type: "mysql"                  # 数据库类型(mysql/pgsql/mssql/sqlite/oracle)
     role: "master"                 # "(可选)数据库主从角色(master/slave)，不使用应用层的主从机制请均设置为master"
     debug: "true"                  # "(可选)开启调试模式

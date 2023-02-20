@@ -17,6 +17,8 @@ func SignUp() {
 
 	//Bot-server 处理事件
 	a.POST("/", service.EventService)
+	// 管理接口
+	a.POST("/manage", service.Manage)
 
 	err := s.Start()
 	if err != nil {

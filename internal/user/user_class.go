@@ -14,29 +14,38 @@ import (
 )
 
 type Class struct {
-	Name        string   `json:"name"`
-	Uid         int      `json:"uid"`
-	RoomId      int      `json:"room_id"`
-	LiveTime    int64    `json:"live_time"`
-	LiveStatus  int      `json:"live_status"`
-	MaxHotValue int      `json:"max_hot_value"`
-	Flag        bool     `json:"flag"`
-	Groups      []*Group `json:"groups"`
+	Name             string   `json:"name"`
+	Uid              int      `json:"uid"`
+	RoomId           int      `json:"room_id"`
+	LiveTime         int64    `json:"live_time"`
+	LiveStatus       int      `json:"live_status"`
+	MaxHotValue      int      `json:"max_hot_value"`
+	LastDynamicId    string   `json:"last_dynamic_id"`
+	LastTopDynamicId string   `json:"last_top_dynamic_id"`
+	IsExistingTop    bool     `json:"is_existing_top"`
+	LiveFlag         bool     `json:"live_flag"`
+	DynamicFlag      bool     `json:"dynamic_flag"`
+	Groups           []*Group `json:"groups"`
 }
 
 type Group struct {
-	Id    int `json:"id"`
-	AtAll int `json:"atAll"`
+	Id                int `json:"id"`
+	AtAll             int `json:"atAll"`
+	LiveNotification  int `json:"live_notification"`
+	SpaceNotification int `json:"space_notification"`
 }
 
 const (
 	liveRoomInfoUrl = "https://api.live.bilibili.com/room/v1/Room/get_info?room_id="
-	statInfoUrl     = "https://api.bilibili.com/x/relation/stat?vmid="
-	spaceInfoUrl    = "https://api.bilibili.com/x/polymer/web-dynamic/v1/feed/space"
-	userInfoUrl     = "https://api.bilibili.com/x/web-interface/card?mid="
+	//statInfoUrl     = "https://api.bilibili.com/x/relation/stat?vmid="
+	spaceInfoUrl = "https://api.bilibili.com/x/polymer/web-dynamic/v1/feed/space"
+	//userInfoUrl  = "https://api.bilibili.com/x/web-interface/card?mid="
 )
 
-var Objects sync.Map
+var (
+	Objects sync.Map
+	Cancels sync.Map
+)
 
 func (c *Class) ListenBiliBiliLiveNotification(ctx context.Context) {
 	syncgroup.Wait.Add(1)
@@ -50,22 +59,8 @@ func (c *Class) ListenBiliBiliLiveNotification(ctx context.Context) {
 			log.Println("INFO: bilibili live service returned, context done.")
 			return
 		case <-ticker.C:
-			url := fmt.Sprintf("%s%d", liveRoomInfoUrl, c.RoomId)
-			response := client.Get(ctx, url)
-			if response == nil {
-				log.Println("ERROR: failed to get live info, nil response.")
-				continue
-			}
-
-			var liveInfo = &types.LiveRoomInfo{}
-			err := json.Unmarshal(response.ReadAll(), liveInfo)
-			if err != nil {
-				log.Println(fmt.Sprintf("ERROR: failed to get live info, err(%s).", err.Error()))
-				continue
-			}
-
-			if liveInfo.Msg != "ok" || liveInfo.Message != "ok" {
-				log.Println("ERROR: failed to get live info, message not ok.")
+			liveInfo := GetLiveRoomInfo(ctx, c.RoomId)
+			if liveInfo == nil {
 				continue
 			}
 
@@ -77,10 +72,10 @@ func (c *Class) ListenBiliBiliLiveNotification(ctx context.Context) {
 					c.LiveTime = time.Now().Unix()
 				}
 
-				if !c.Flag {
+				if !c.LiveFlag {
 					c.LiveStatus = liveInfo.Data.LiveStatus
-					c.Flag = true
-				} else if c.Flag {
+					c.LiveFlag = true
+				} else if c.LiveFlag {
 					if liveInfo.Data.LiveStatus == 1 { // 开播
 						c.sendStartLiveNotification(liveInfo)
 						// 更新当前直播状态
@@ -137,6 +132,10 @@ func (c *Class) sendStartLiveNotification(info *types.LiveRoomInfo) {
 // 发送下播消息到每个订阅群
 func (c *Class) sendStopLiveNotification() {
 	for _, group := range c.Groups {
+		if group.LiveNotification != 1 {
+			continue
+		}
+
 		message := fmt.Sprintf("%s下播啦!\n", c.Name) +
 			fmt.Sprintf(
 				"本次直播时间：%d小时%d分%d秒\n~~",
@@ -153,6 +152,10 @@ func (c *Class) sendStopLiveNotification() {
 func (c *Class) sendPlayOtherVideoNotification(info *types.LiveRoomInfo) {
 	if c.LiveStatus == 0 {
 		for _, group := range c.Groups {
+			if group.LiveNotification != 1 {
+				continue
+			}
+
 			message := fmt.Sprintf("%s正在轮播中\n", c.Name) +
 				fmt.Sprintf("直播间地址：https://live.bilibili.com/%d\n", info.Data.RoomId) +
 				fmt.Sprintf("当前人气值%d~\n", info.Data.Online) +
@@ -162,6 +165,10 @@ func (c *Class) sendPlayOtherVideoNotification(info *types.LiveRoomInfo) {
 
 	} else if c.LiveStatus == 1 {
 		for _, group := range c.Groups {
+			if group.LiveNotification != 1 {
+				continue
+			}
+
 			message := fmt.Sprintf("%s下播啦!\n", c.Name) +
 				fmt.Sprintf(
 					"本次直播时间：%d小时%d分%d秒\n~~",
@@ -189,30 +196,232 @@ func (c *Class) ListenBiliBiliSpaceNotification(ctx context.Context) {
 			log.Println("INFO: bilibili space service returned, context done.")
 			return
 		case <-ticker.C:
+			dynamicInfo := GetDynamicInfo(ctx, c.Uid)
+			if dynamicInfo == nil {
+				continue
+			}
 
+			for i, dynamicItem := range dynamicInfo.Data.Items {
+				if !c.DynamicFlag {
+					if dynamicItem.Modules.ModuleTag.Text == "置顶" {
+						c.LastTopDynamicId = dynamicItem.IdStr
+						c.IsExistingTop = true
+					} else {
+						c.LastDynamicId = dynamicItem.IdStr
+					}
+
+				} else if c.DynamicFlag {
+					if dynamicItem.Modules.ModuleTag.Text == "置顶" { //置顶动态
+						if c.LastTopDynamicId != dynamicItem.IdStr {
+							c.handleTopDynamic(dynamicInfo, i)
+							c.LastTopDynamicId = dynamicItem.IdStr
+						}
+						c.IsExistingTop = true
+
+					} else { // 普通动态
+						if c.LastDynamicId != dynamicItem.IdStr {
+							c.handleDynamic(dynamicInfo, i)
+							c.LastTopDynamicId = dynamicItem.IdStr
+						}
+
+						// 如果第一条是普通动态，说明没有置顶动态
+						if i == 0 {
+							c.IsExistingTop = false
+						}
+					}
+				}
+
+				c.DynamicFlag = true
+
+				// 仅处理第一条动态
+				if c.IsExistingTop && i == 0 {
+					continue
+				} else {
+					break
+				}
+			}
 		}
 	}
 }
 
-func getUserInfo(ctx context.Context, uid int) *types.BilibiliUserInfo {
-	url := fmt.Sprintf("%s%d", userInfoUrl, uid)
+func (c *Class) handleDynamic(dynamicInfo *types.SpaceInfo, index int) {
+	message := FormatDynamic(dynamicInfo, index)
+
+	for _, group := range c.Groups {
+		if group.SpaceNotification != 1 {
+			continue
+		}
+
+		bot.SendMessage(group.Id, "group", message)
+	}
+}
+
+func (c *Class) handleTopDynamic(dynamicInfo *types.SpaceInfo, index int) {
+	message := fmt.Sprintf("%s更新了置顶动态\n\n:", c.Name)
+	message += FormatDynamic(dynamicInfo, index)
+
+	for _, group := range c.Groups {
+		if group.SpaceNotification != 1 {
+			continue
+		}
+
+		bot.SendMessage(group.Id, "group", message)
+	}
+}
+
+func FormatDynamic(dynamicInfo *types.SpaceInfo, index int) string {
+	var (
+		message string
+		dynamic = dynamicInfo.Data.Items[index]
+	)
+
+	switch dynamic.Type {
+	case "DYNAMIC_TYPE_WORD":
+		message = fmt.Sprintf("%s发布了新动态!\n", dynamic.Modules.ModuleAuthor.Name)
+
+		if dynamic.Modules.ModuleDynamic.Topic != nil {
+			message += fmt.Sprintf("#%s\n", dynamic.Modules.ModuleDynamic.Topic.Name) +
+				fmt.Sprintf("Url:%s\n", dynamic.Modules.ModuleDynamic.Topic.JumpUrl)
+		}
+
+		if dynamic.Modules.ModuleDynamic.Desc != nil {
+			message += fmt.Sprintf("动态地址:https:%s\n", dynamic.Modules.ModuleAuthor.JumpUrl) +
+				fmt.Sprintf("\n%s\n", dynamic.Modules.ModuleDynamic.Desc.Text)
+		}
+
+	case "DYNAMIC_TYPE_AV":
+		message = fmt.Sprintf("%s发布了新视频!\n", dynamic.Modules.ModuleAuthor.Name)
+		if dynamic.Modules.ModuleDynamic.Desc != nil {
+			message += fmt.Sprintf("%s\n", dynamic.Modules.ModuleDynamic.Desc.Text)
+		}
+
+		if dynamic.Modules.ModuleDynamic.Major != nil {
+			message += fmt.Sprintf("\n%s\n", dynamic.Modules.ModuleDynamic.Major.Article.Title) +
+				fmt.Sprintf("视频地址:https:%s\n", dynamic.Modules.ModuleDynamic.Major.Article.JumpUrl) +
+				fmt.Sprintf("[CQ:image,file=%s]", dynamic.Modules.ModuleDynamic.Major.Article.Cover)
+		}
+
+	case "DYNAMIC_TYPE_DRAW":
+		message = fmt.Sprintf("%s发布了新动态!\n", dynamic.Modules.ModuleAuthor.Name)
+
+		if dynamic.Modules.ModuleDynamic.Topic != nil {
+			message += fmt.Sprintf("#%s\n", dynamic.Modules.ModuleDynamic.Topic.Name) +
+				fmt.Sprintf("Url:%s\n", dynamic.Modules.ModuleDynamic.Topic.JumpUrl)
+		}
+
+		if dynamic.Modules.ModuleDynamic.Desc != nil {
+			message += fmt.Sprintf("动态地址:https:%s", dynamic.Modules.ModuleAuthor.JumpUrl) +
+				fmt.Sprintf("\n%s\n", dynamic.Modules.ModuleDynamic.Desc.Text)
+		}
+
+		if dynamic.Modules.ModuleDynamic.Major != nil {
+			if dynamic.Modules.ModuleDynamic.Major.Type == "MAJOR_TYPE_DRAW" {
+				for _, draw := range dynamic.Modules.ModuleDynamic.Major.Draw.Items {
+					message += fmt.Sprintf("[CQ:image,file=%s]\n", draw.Src)
+				}
+			}
+		}
+
+	case "DYNAMIC_TYPE_FORWARD":
+		message = fmt.Sprintf("%s转发了动态!\n", dynamic.Modules.ModuleAuthor.Name)
+
+		if dynamic.Modules.ModuleDynamic.Topic != nil {
+			message += fmt.Sprintf("#%s\n", dynamic.Modules.ModuleDynamic.Topic.Name) +
+				fmt.Sprintf("Url:%s\n", dynamic.Modules.ModuleDynamic.Topic.JumpUrl)
+		}
+
+		if dynamic.Modules.ModuleDynamic.Desc != nil {
+			message += fmt.Sprintf("动态地址:https:%s", dynamic.Modules.ModuleAuthor.JumpUrl) +
+				fmt.Sprintf("\n%s\n", dynamic.Modules.ModuleDynamic.Desc.Text)
+		}
+
+		// 递归处理转发的动态
+		if dynamic.Orig != nil {
+			item := make([]*types.SpaceInfoItem, 0)
+			item = append(item, dynamic.Orig)
+
+			message += "\n" + FormatDynamic(&types.SpaceInfo{
+				Data: struct {
+					HasMore        bool                   `json:"has_more"`
+					Items          []*types.SpaceInfoItem `json:"items"`
+					Offset         string                 `json:"offset"`
+					UpdateBaseline string                 `json:"update_baseline"`
+					UpdateNum      int                    `json:"update_num"`
+				}{
+					Items: item,
+				},
+			}, 0)
+		}
+	}
+
+	return message
+}
+
+func GetLiveRoomInfo(ctx context.Context, roomId int) *types.LiveRoomInfo {
+	url := fmt.Sprintf("%s%d", liveRoomInfoUrl, roomId)
 	response := client.Get(ctx, url)
 	if response == nil {
-		log.Println("ERROR: failed to get user info, nil response.")
+		log.Println("ERROR: failed to get live info, nil response.")
 		return nil
 	}
 
-	userInfo := &types.BilibiliUserInfo{}
-	err := json.Unmarshal(response.ReadAll(), userInfo)
+	var liveInfo = &types.LiveRoomInfo{}
+	err := json.Unmarshal(response.ReadAll(), liveInfo)
 	if err != nil {
-		log.Println(fmt.Sprintf("ERROR: failed to get user info, err(%s).", err))
+		log.Println(fmt.Sprintf("ERROR: failed to get live info, err(%s).", err.Error()))
 		return nil
 	}
 
-	if userInfo.Code != 0 {
-		log.Println("ERROR: failed to get user info, code not 0.")
+	if liveInfo.Msg != "ok" || liveInfo.Message != "ok" {
+		log.Println("ERROR: failed to get live info, message not ok.")
 		return nil
 	}
 
-	return userInfo
+	return liveInfo
 }
+
+func GetDynamicInfo(ctx context.Context, uid int) *types.SpaceInfo {
+	url := fmt.Sprintf("%s?offset=&host_mid=%d&timezone_offset=-480", spaceInfoUrl, uid)
+	response := client.Get(ctx, url)
+	if response == nil {
+		log.Println("ERROR: failed to get dynamic info, nil response.")
+		return nil
+	}
+
+	var dynamicInfo = &types.SpaceInfo{}
+	err := json.Unmarshal(response.ReadAll(), dynamicInfo)
+	if err != nil {
+		log.Println(fmt.Sprintf("ERROR: failed to get dynamic info, err(%s).", err.Error()))
+		return nil
+	}
+
+	if dynamicInfo.Code != 0 || dynamicInfo.Message != "0" {
+		log.Println("ERROR: failed to get dynamic info, message not ok.")
+		return nil
+	}
+
+	return dynamicInfo
+}
+
+//func getUserInfo(ctx context.Context, uid int) *types.BilibiliUserInfo {
+//	url := fmt.Sprintf("%s%d", userInfoUrl, uid)
+//	response := client.Get(ctx, url)
+//	if response == nil {
+//		log.Println("ERROR: failed to get user info, nil response.")
+//		return nil
+//	}
+//
+//	userInfo := &types.BilibiliUserInfo{}
+//	err := json.Unmarshal(response.ReadAll(), userInfo)
+//	if err != nil {
+//		log.Println(fmt.Sprintf("ERROR: failed to get user info, err(%s).", err))
+//		return nil
+//	}
+//
+//	if userInfo.Code != 0 {
+//		log.Println("ERROR: failed to get user info, code not 0.")
+//		return nil
+//	}
+//
+//	return userInfo
+//}

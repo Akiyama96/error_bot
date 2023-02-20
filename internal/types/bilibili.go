@@ -96,306 +96,181 @@ type SpaceInfo struct {
 	Message string `json:"message"`
 	Ttl     int    `json:"ttl"`
 	Data    struct {
-		HasMore bool `json:"has_more"`
-		Items   []struct {
-			Basic struct {
-				CommentIdStr string `json:"comment_id_str"`
-				CommentType  int    `json:"comment_type"`
-				LikeIcon     struct {
-					ActionUrl string `json:"action_url"`
-					EndUrl    string `json:"end_url"`
-					Id        int    `json:"id"`
-					StartUrl  string `json:"start_url"`
-				} `json:"like_icon"`
-				RidStr string `json:"rid_str"`
-			} `json:"basic"`
-			IdStr   string `json:"id_str"`
-			Modules struct {
-				ModuleAuthor struct {
-					Decorate struct {
-						CardUrl string `json:"card_url"`
-						Fan     struct {
-							Color  string `json:"color"`
-							IsFan  bool   `json:"is_fan"`
-							NumStr string `json:"num_str"`
-							Number int    `json:"number"`
-						} `json:"fan"`
-						Id      int    `json:"id"`
-						JumpUrl string `json:"jump_url"`
-						Name    string `json:"name"`
-						Type    int    `json:"type"`
-					} `json:"decorate"`
-					Face           string      `json:"face"`
-					FaceNft        bool        `json:"face_nft"`
-					Following      interface{} `json:"following"`
-					JumpUrl        string      `json:"jump_url"`
-					Label          string      `json:"label"`
-					Mid            int         `json:"mid"`
-					Name           string      `json:"name"`
-					OfficialVerify struct {
-						Desc string `json:"desc"`
-						Type int    `json:"type"`
-					} `json:"official_verify"`
-					Pendant struct {
-						Expire            int    `json:"expire"`
-						Image             string `json:"image"`
-						ImageEnhance      string `json:"image_enhance"`
-						ImageEnhanceFrame string `json:"image_enhance_frame"`
-						Name              string `json:"name"`
-						Pid               int    `json:"pid"`
-					} `json:"pendant"`
-					PubAction       string `json:"pub_action"`
-					PubLocationText string `json:"pub_location_text"`
-					PubTime         string `json:"pub_time"`
-					PubTs           int    `json:"pub_ts"`
-					Type            string `json:"type"`
-					Vip             struct {
-						AvatarSubscript    int    `json:"avatar_subscript"`
-						AvatarSubscriptUrl string `json:"avatar_subscript_url"`
-						DueDate            int64  `json:"due_date"`
-						Label              struct {
-							BgColor               string `json:"bg_color"`
-							BgStyle               int    `json:"bg_style"`
-							BorderColor           string `json:"border_color"`
-							ImgLabelUriHans       string `json:"img_label_uri_hans"`
-							ImgLabelUriHansStatic string `json:"img_label_uri_hans_static"`
-							ImgLabelUriHant       string `json:"img_label_uri_hant"`
-							ImgLabelUriHantStatic string `json:"img_label_uri_hant_static"`
-							LabelTheme            string `json:"label_theme"`
-							Path                  string `json:"path"`
-							Text                  string `json:"text"`
-							TextColor             string `json:"text_color"`
-							UseImgLabel           bool   `json:"use_img_label"`
-						} `json:"label"`
-						NicknameColor string `json:"nickname_color"`
-						Status        int    `json:"status"`
-						ThemeType     int    `json:"theme_type"`
-						Type          int    `json:"type"`
-					} `json:"vip"`
-				} `json:"module_author"`
-				ModuleDynamic struct {
-					Additional interface{} `json:"additional"`
-					Desc       *struct {
-						RichTextNodes []struct {
-							OrigText string `json:"orig_text"`
-							Text     string `json:"text"`
-							Type     string `json:"type"`
-							Emoji    struct {
-								IconUrl string `json:"icon_url"`
-								Size    int    `json:"size"`
-								Text    string `json:"text"`
-								Type    int    `json:"type"`
-							} `json:"emoji,omitempty"`
-						} `json:"rich_text_nodes"`
-						Text string `json:"text"`
-					} `json:"desc"`
-					Major *struct {
-						Article struct {
-							Covers  []string `json:"covers"`
-							Desc    string   `json:"desc"`
-							Id      int      `json:"id"`
-							JumpUrl string   `json:"jump_url"`
-							Label   string   `json:"label"`
-							Title   string   `json:"title"`
-						} `json:"article,omitempty"`
-						Type string `json:"type"`
-						Draw struct {
-							Id    int `json:"id"`
-							Items []struct {
-								Height int           `json:"height"`
-								Size   float64       `json:"size"`
-								Src    string        `json:"src"`
-								Tags   []interface{} `json:"tags"`
-								Width  int           `json:"width"`
-							} `json:"items"`
-						} `json:"draw,omitempty"`
-					} `json:"major"`
-					Topic interface{} `json:"topic"`
-				} `json:"module_dynamic"`
-				ModuleInteraction struct {
-					Items []struct {
-						Desc struct {
-							RichTextNodes []struct {
-								OrigText string `json:"orig_text"`
-								Rid      string `json:"rid,omitempty"`
-								Text     string `json:"text"`
-								Type     string `json:"type"`
-								Emoji    struct {
-									IconUrl string `json:"icon_url"`
-									Size    int    `json:"size"`
-									Text    string `json:"text"`
-									Type    int    `json:"type"`
-								} `json:"emoji,omitempty"`
-							} `json:"rich_text_nodes"`
-							Text string `json:"text"`
-						} `json:"desc"`
-						Type int `json:"type"`
-					} `json:"items"`
-				} `json:"module_interaction"`
-				ModuleMore struct {
-					ThreePointItems []struct {
-						Label string `json:"label"`
-						Type  string `json:"type"`
-					} `json:"three_point_items"`
-				} `json:"module_more"`
-				ModuleStat struct {
-					Comment struct {
-						Count     int  `json:"count"`
-						Forbidden bool `json:"forbidden"`
-					} `json:"comment"`
-					Forward struct {
-						Count     int  `json:"count"`
-						Forbidden bool `json:"forbidden"`
-					} `json:"forward"`
-					Like struct {
-						Count     int  `json:"count"`
-						Forbidden bool `json:"forbidden"`
-						Status    bool `json:"status"`
-					} `json:"like"`
-				} `json:"module_stat"`
-				ModuleTag struct {
-					Text string `json:"text"`
-				} `json:"module_tag,omitempty"`
-			} `json:"modules"`
-			Type    string `json:"type"`
-			Visible bool   `json:"visible"`
-			Orig    struct {
-				Basic struct {
-					CommentIdStr string `json:"comment_id_str"`
-					CommentType  int    `json:"comment_type"`
-					LikeIcon     struct {
-						ActionUrl string `json:"action_url"`
-						EndUrl    string `json:"end_url"`
-						Id        int    `json:"id"`
-						StartUrl  string `json:"start_url"`
-					} `json:"like_icon"`
-					RidStr string `json:"rid_str"`
-				} `json:"basic"`
-				IdStr   string `json:"id_str"`
-				Modules struct {
-					ModuleAuthor struct {
-						Decorate struct {
-							CardUrl string `json:"card_url"`
-							Fan     struct {
-								Color  string `json:"color"`
-								IsFan  bool   `json:"is_fan"`
-								NumStr string `json:"num_str"`
-								Number int    `json:"number"`
-							} `json:"fan"`
-							Id      int    `json:"id"`
-							JumpUrl string `json:"jump_url"`
-							Name    string `json:"name"`
-							Type    int    `json:"type"`
-						} `json:"decorate"`
-						Face           string      `json:"face"`
-						FaceNft        bool        `json:"face_nft"`
-						Following      interface{} `json:"following"`
-						JumpUrl        string      `json:"jump_url"`
-						Label          string      `json:"label"`
-						Mid            int         `json:"mid"`
-						Name           string      `json:"name"`
-						OfficialVerify struct {
-							Desc string `json:"desc"`
-							Type int    `json:"type"`
-						} `json:"official_verify"`
-						Pendant struct {
-							Expire            int    `json:"expire"`
-							Image             string `json:"image"`
-							ImageEnhance      string `json:"image_enhance"`
-							ImageEnhanceFrame string `json:"image_enhance_frame"`
-							Name              string `json:"name"`
-							Pid               int    `json:"pid"`
-						} `json:"pendant"`
-						PubAction string `json:"pub_action"`
-						PubTime   string `json:"pub_time"`
-						PubTs     int    `json:"pub_ts"`
-						Type      string `json:"type"`
-						Vip       struct {
-							AvatarSubscript    int    `json:"avatar_subscript"`
-							AvatarSubscriptUrl string `json:"avatar_subscript_url"`
-							DueDate            int64  `json:"due_date"`
-							Label              struct {
-								BgColor               string `json:"bg_color"`
-								BgStyle               int    `json:"bg_style"`
-								BorderColor           string `json:"border_color"`
-								ImgLabelUriHans       string `json:"img_label_uri_hans"`
-								ImgLabelUriHansStatic string `json:"img_label_uri_hans_static"`
-								ImgLabelUriHant       string `json:"img_label_uri_hant"`
-								ImgLabelUriHantStatic string `json:"img_label_uri_hant_static"`
-								LabelTheme            string `json:"label_theme"`
-								Path                  string `json:"path"`
-								Text                  string `json:"text"`
-								TextColor             string `json:"text_color"`
-								UseImgLabel           bool   `json:"use_img_label"`
-							} `json:"label"`
-							NicknameColor string `json:"nickname_color"`
-							Status        int    `json:"status"`
-							ThemeType     int    `json:"theme_type"`
-							Type          int    `json:"type"`
-						} `json:"vip"`
-					} `json:"module_author"`
-					ModuleDynamic struct {
-						Additional interface{} `json:"additional"`
-						Desc       struct {
-							RichTextNodes []struct {
-								OrigText string `json:"orig_text"`
-								Rid      string `json:"rid,omitempty"`
-								Text     string `json:"text"`
-								Type     string `json:"type"`
-								Emoji    struct {
-									IconUrl string `json:"icon_url"`
-									Size    int    `json:"size"`
-									Text    string `json:"text"`
-									Type    int    `json:"type"`
-								} `json:"emoji,omitempty"`
-								JumpUrl string `json:"jump_url,omitempty"`
-							} `json:"rich_text_nodes"`
-							Text string `json:"text"`
-						} `json:"desc"`
-						Major struct {
-							Draw struct {
-								Id    int `json:"id"`
-								Items []struct {
-									Height int           `json:"height"`
-									Size   float64       `json:"size"`
-									Src    string        `json:"src"`
-									Tags   []interface{} `json:"tags"`
-									Width  int           `json:"width"`
-								} `json:"items"`
-							} `json:"draw,omitempty"`
-							Type    string `json:"type"`
-							Archive struct {
-								Aid   string `json:"aid"`
-								Badge struct {
-									BgColor string `json:"bg_color"`
-									Color   string `json:"color"`
-									Text    string `json:"text"`
-								} `json:"badge"`
-								Bvid           string `json:"bvid"`
-								Cover          string `json:"cover"`
-								Desc           string `json:"desc"`
-								DisablePreview int    `json:"disable_preview"`
-								DurationText   string `json:"duration_text"`
-								JumpUrl        string `json:"jump_url"`
-								Stat           struct {
-									Danmaku string `json:"danmaku"`
-									Play    string `json:"play"`
-								} `json:"stat"`
-								Title string `json:"title"`
-								Type  int    `json:"type"`
-							} `json:"archive,omitempty"`
-						} `json:"major"`
-						Topic interface{} `json:"topic"`
-					} `json:"module_dynamic"`
-				} `json:"modules"`
-				Type    string `json:"type"`
-				Visible bool   `json:"visible"`
-			} `json:"orig,omitempty"`
-		} `json:"items"`
-		Offset         string `json:"offset"`
-		UpdateBaseline string `json:"update_baseline"`
-		UpdateNum      int    `json:"update_num"`
+		HasMore        bool             `json:"has_more"`
+		Items          []*SpaceInfoItem `json:"items"`
+		Offset         string           `json:"offset"`
+		UpdateBaseline string           `json:"update_baseline"`
+		UpdateNum      int              `json:"update_num"`
 	} `json:"data"`
+}
+
+type SpaceInfoItem struct {
+	Basic struct {
+		CommentIdStr string `json:"comment_id_str"`
+		CommentType  int    `json:"comment_type"`
+		LikeIcon     struct {
+			ActionUrl string `json:"action_url"`
+			EndUrl    string `json:"end_url"`
+			Id        int    `json:"id"`
+			StartUrl  string `json:"start_url"`
+		} `json:"like_icon"`
+		RidStr string `json:"rid_str"`
+	} `json:"basic"`
+	IdStr   string `json:"id_str"`
+	Modules struct {
+		ModuleAuthor struct {
+			Decorate struct {
+				CardUrl string `json:"card_url"`
+				Fan     struct {
+					Color  string `json:"color"`
+					IsFan  bool   `json:"is_fan"`
+					NumStr string `json:"num_str"`
+					Number int    `json:"number"`
+				} `json:"fan"`
+				Id      int    `json:"id"`
+				JumpUrl string `json:"jump_url"`
+				Name    string `json:"name"`
+				Type    int    `json:"type"`
+			} `json:"decorate"`
+			Face           string      `json:"face"`
+			FaceNft        bool        `json:"face_nft"`
+			Following      interface{} `json:"following"`
+			JumpUrl        string      `json:"jump_url"`
+			Label          string      `json:"label"`
+			Mid            int         `json:"mid"`
+			Name           string      `json:"name"`
+			OfficialVerify struct {
+				Desc string `json:"desc"`
+				Type int    `json:"type"`
+			} `json:"official_verify"`
+			Pendant struct {
+				Expire            int    `json:"expire"`
+				Image             string `json:"image"`
+				ImageEnhance      string `json:"image_enhance"`
+				ImageEnhanceFrame string `json:"image_enhance_frame"`
+				Name              string `json:"name"`
+				Pid               int    `json:"pid"`
+			} `json:"pendant"`
+			PubAction       string `json:"pub_action"`
+			PubLocationText string `json:"pub_location_text"`
+			PubTime         string `json:"pub_time"`
+			PubTs           int    `json:"pub_ts"`
+			Type            string `json:"type"`
+			Vip             struct {
+				AvatarSubscript    int    `json:"avatar_subscript"`
+				AvatarSubscriptUrl string `json:"avatar_subscript_url"`
+				DueDate            int64  `json:"due_date"`
+				Label              struct {
+					BgColor               string `json:"bg_color"`
+					BgStyle               int    `json:"bg_style"`
+					BorderColor           string `json:"border_color"`
+					ImgLabelUriHans       string `json:"img_label_uri_hans"`
+					ImgLabelUriHansStatic string `json:"img_label_uri_hans_static"`
+					ImgLabelUriHant       string `json:"img_label_uri_hant"`
+					ImgLabelUriHantStatic string `json:"img_label_uri_hant_static"`
+					LabelTheme            string `json:"label_theme"`
+					Path                  string `json:"path"`
+					Text                  string `json:"text"`
+					TextColor             string `json:"text_color"`
+					UseImgLabel           bool   `json:"use_img_label"`
+				} `json:"label"`
+				NicknameColor string `json:"nickname_color"`
+				Status        int    `json:"status"`
+				ThemeType     int    `json:"theme_type"`
+				Type          int    `json:"type"`
+			} `json:"vip"`
+		} `json:"module_author"`
+		ModuleDynamic struct {
+			Additional interface{} `json:"additional"`
+			Desc       *struct {
+				RichTextNodes []struct {
+					OrigText string `json:"orig_text"`
+					Text     string `json:"text"`
+					Type     string `json:"type"`
+					Emoji    struct {
+						IconUrl string `json:"icon_url"`
+						Size    int    `json:"size"`
+						Text    string `json:"text"`
+						Type    int    `json:"type"`
+					} `json:"emoji,omitempty"`
+				} `json:"rich_text_nodes"`
+				Text string `json:"text"`
+			} `json:"desc"`
+			Major *struct {
+				Article struct {
+					Cover   string `json:"cover"`
+					Desc    string `json:"desc"`
+					Id      int    `json:"id"`
+					JumpUrl string `json:"jump_url"`
+					Label   string `json:"label"`
+					Title   string `json:"title"`
+				} `json:"article,omitempty"`
+				Type string `json:"type"`
+				Draw struct {
+					Id    int `json:"id"`
+					Items []struct {
+						Height int           `json:"height"`
+						Size   float64       `json:"size"`
+						Src    string        `json:"src"`
+						Tags   []interface{} `json:"tags"`
+						Width  int           `json:"width"`
+					} `json:"items"`
+				} `json:"draw,omitempty"`
+			} `json:"major"`
+			Topic *struct {
+				Id      int    `json:"id"`
+				JumpUrl string `json:"jump_url"`
+				Name    string `json:"name"`
+			} `json:"topic"`
+		} `json:"module_dynamic"`
+		ModuleInteraction struct {
+			Items []struct {
+				Desc struct {
+					RichTextNodes []struct {
+						OrigText string `json:"orig_text"`
+						Rid      string `json:"rid,omitempty"`
+						Text     string `json:"text"`
+						Type     string `json:"type"`
+						Emoji    struct {
+							IconUrl string `json:"icon_url"`
+							Size    int    `json:"size"`
+							Text    string `json:"text"`
+							Type    int    `json:"type"`
+						} `json:"emoji,omitempty"`
+					} `json:"rich_text_nodes"`
+					Text string `json:"text"`
+				} `json:"desc"`
+				Type int `json:"type"`
+			} `json:"items"`
+		} `json:"module_interaction"`
+		ModuleMore struct {
+			ThreePointItems []struct {
+				Label string `json:"label"`
+				Type  string `json:"type"`
+			} `json:"three_point_items"`
+		} `json:"module_more"`
+		ModuleStat struct {
+			Comment struct {
+				Count     int  `json:"count"`
+				Forbidden bool `json:"forbidden"`
+			} `json:"comment"`
+			Forward struct {
+				Count     int  `json:"count"`
+				Forbidden bool `json:"forbidden"`
+			} `json:"forward"`
+			Like struct {
+				Count     int  `json:"count"`
+				Forbidden bool `json:"forbidden"`
+				Status    bool `json:"status"`
+			} `json:"like"`
+		} `json:"module_stat"`
+		ModuleTag struct {
+			Text string `json:"text"`
+		} `json:"module_tag,omitempty"`
+	} `json:"modules"`
+	Type    string         `json:"type"`
+	Visible bool           `json:"visible"`
+	Orig    *SpaceInfoItem `json:"orig,omitempty"`
 }
 
 type BilibiliUserInfo struct {

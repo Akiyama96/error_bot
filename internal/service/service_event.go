@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"encoding/json"
 	"error_bot/config"
 	"error_bot/internal/bot"
 	"error_bot/internal/client"
@@ -31,4 +32,17 @@ func AcceptInvite(event *types.Event) {
 	client.Post(context.Background(), url, formattedData)
 
 	bot.SendMessage(event.Sender.UserId, "private", "我接受邀请啦")
+}
+
+func ReplaceServiceConfig(event *types.Event) {
+	var serviceConfig = &g.Map{}
+	err := json.Unmarshal([]byte(event.Message), serviceConfig)
+	if err != nil {
+		bot.SendMessage(
+			event.Sender.UserId,
+			event.MessageType,
+			fmt.Sprintf("ERROR: failed to unmarshal command, err(%s)", err.Error()),
+		)
+	}
+
 }

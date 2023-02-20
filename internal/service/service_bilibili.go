@@ -53,8 +53,8 @@ func StartBiliBiliService() {
 		keyOfDynamic := fmt.Sprintf("%d_dynamic", obj.Uid)
 		user.Cancels.Store(keyOfDynamic, cancelDynamic)
 
-		value.(*user.Class).ListenBiliBiliLiveNotification(ctxLive)
-		value.(*user.Class).ListenBiliBiliSpaceNotification(ctxDynamic)
+		go value.(*user.Class).ListenBiliBiliLiveNotification(ctxLive)
+		go value.(*user.Class).ListenBiliBiliSpaceNotification(ctxDynamic)
 		return true
 	})
 }

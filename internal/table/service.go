@@ -1,5 +1,5 @@
 package table
 
 const (
-	ServiceInfo = "bilibili_service"
+	ServiceInfo = "bilibili_services"
 )

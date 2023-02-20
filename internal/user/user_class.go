@@ -65,13 +65,15 @@ func (c *Class) ListenBiliBiliLiveNotification(ctx context.Context) {
 	syncgroup.Wait.Add(1)
 	defer syncgroup.Wait.Done()
 
+	bot.SendMessage(config.Content.BotServerConfig.QQ, "private", fmt.Sprintf("INFO: bilibili live service started.\nUid:%d", c.Uid))
+
 	ticker := time.NewTicker(time.Second * 3)
 
 	for {
 		select {
 		case <-ctx.Done():
 			log.Println("INFO: bilibili live service returned, context done.")
-			bot.SendMessage(config.Content.BotServerConfig.QQ, "private", fmt.Sprintf("INFO: bilibili live service returned, context done.\n Uid:%d", c.Uid))
+			bot.SendMessage(config.Content.BotServerConfig.QQ, "private", fmt.Sprintf("INFO: bilibili live service returned, context done.\nUid:%d", c.Uid))
 			return
 		case <-ticker.C:
 			liveInfo := GetLiveRoomInfo(ctx, c.RoomId)
@@ -203,13 +205,15 @@ func (c *Class) ListenBiliBiliSpaceNotification(ctx context.Context) {
 	syncgroup.Wait.Add(1)
 	defer syncgroup.Wait.Done()
 
+	bot.SendMessage(config.Content.BotServerConfig.QQ, "private", fmt.Sprintf("INFO: bilibili space service started.\nUid:%d", c.Uid))
+
 	ticker := time.NewTicker(time.Second * 3)
 
 	for {
 		select {
 		case <-ctx.Done():
 			log.Println("INFO: bilibili space service returned, context done.")
-			bot.SendMessage(config.Content.BotServerConfig.QQ, "private", fmt.Sprintf("INFO: bilibili space service returned, context done.\n Uid:%d", c.Uid))
+			bot.SendMessage(config.Content.BotServerConfig.QQ, "private", fmt.Sprintf("INFO: bilibili space service returned, context done.\nUid:%d", c.Uid))
 			return
 		case <-ticker.C:
 			dynamicInfo := GetDynamicInfo(ctx, c.Uid)

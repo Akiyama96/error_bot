@@ -46,6 +46,7 @@ func ReplaceServiceConfig(event *types.Event) {
 			event.MessageType,
 			fmt.Sprintf("ERROR: failed to unmarshal command, err(%s)", err.Error()),
 		)
+		return
 	}
 
 	if event.GroupId != 0 && gconv.Int(serviceConfig["group_id"]) == 0 {
@@ -58,6 +59,7 @@ func ReplaceServiceConfig(event *types.Event) {
 			event.MessageType,
 			fmt.Sprintf("ERROR: not found group ID."),
 		)
+		return
 	}
 
 	if gconv.Int(serviceConfig["room_id"]) == 0 {
@@ -66,6 +68,7 @@ func ReplaceServiceConfig(event *types.Event) {
 			event.MessageType,
 			fmt.Sprintf("ERROR: not found room ID."),
 		)
+		return
 	}
 
 	liveRoomInfo := getLiveStatus(serviceConfig)
@@ -75,6 +78,7 @@ func ReplaceServiceConfig(event *types.Event) {
 			event.MessageType,
 			fmt.Sprintf("ERROR: not found live room."),
 		)
+		return
 	}
 
 	userInfo := user.GetUserInfo(context.Background(), gconv.Int(liveRoomInfo["uid"]))
@@ -84,6 +88,7 @@ func ReplaceServiceConfig(event *types.Event) {
 			event.MessageType,
 			fmt.Sprintf("ERROR: not found user."),
 		)
+		return
 	}
 
 	var allBilibiliServiceConfig = &types.BilibiliService{

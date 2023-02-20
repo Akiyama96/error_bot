@@ -58,9 +58,15 @@ func handleEvent(event *types.Event) {
 func handleMessage(event *types.Event) {
 	switch event.MessageType {
 	case "group":
+		if len(event.Message) > 5 && event.Message[:6] == "config" {
+			event.Message = strings.Replace(event.Message, "config", "", -1)
+			ReplaceServiceConfig(event)
+			return
+		}
+
 	case "private":
-		if len(event.Message) > 5 && event.Message[:8] == "config:" {
-			event.Message = strings.Replace(event.Message, "config:", "", -1)
+		if len(event.Message) > 5 && event.Message[:6] == "config" {
+			event.Message = strings.Replace(event.Message, "config", "", -1)
 			ReplaceServiceConfig(event)
 			return
 		}

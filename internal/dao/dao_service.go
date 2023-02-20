@@ -34,6 +34,7 @@ func ReplaceServiceInfo(info *types.BilibiliService) error {
 		"live_notification":  info.LiveNotification,
 		"space_notification": info.SpaceNotification,
 		"at_all":             info.AtAll,
+		"enable":             info.Enable,
 	}
 
 	_, err := m.Replace(replaceData)

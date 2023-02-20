@@ -33,7 +33,7 @@ func LoadConfig() {
 	g.Cfg().GetAdapter().(*gcfg.AdapterFile).SetPath(fmt.Sprintf("../"))
 	g.Cfg().GetAdapter().(*gcfg.AdapterFile).SetFileName("config.yaml")
 
-	configFile, err := os.ReadFile("../config.yaml")
+	configFile, err := os.ReadFile("./config.yaml")
 	if err != nil {
 		log.Fatal(fmt.Sprintf("ERROR: failed to load config, err(%s).", err))
 	}

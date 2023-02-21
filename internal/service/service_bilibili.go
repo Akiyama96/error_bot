@@ -9,6 +9,8 @@ import (
 	"log"
 )
 
+var flag bool
+
 // StartBiliBiliService 开始监听BiliBili的账号状态
 func StartBiliBiliService() {
 	infos, err := dao.GetServiceInfo()
@@ -20,6 +22,13 @@ func StartBiliBiliService() {
 	for _, info := range infos {
 		CreateObject(info)
 	}
+
+	user.Objects.Range(func(key, value any) bool {
+		value.(*user.Class).StartNewService()
+		return true
+	})
+
+	flag = true
 }
 
 func CreateObject(info *types.BilibiliService) {
@@ -42,8 +51,10 @@ func CreateObject(info *types.BilibiliService) {
 		}
 
 		newObject.Groups = append(newObject.Groups, &user.Group{
-			Id:    info.GroupID,
-			AtAll: info.AtAll,
+			Id:                info.GroupID,
+			LiveNotification:  info.LiveNotification,
+			SpaceNotification: info.SpaceNotification,
+			AtAll:             info.AtAll,
 		})
 
 		object = newObject
@@ -59,5 +70,9 @@ func CreateObject(info *types.BilibiliService) {
 		v.(context.CancelFunc)()
 	}
 
-	object.(*user.Class).StartNewService()
+	user.Objects.Store(info.UserID, object)
+
+	if flag {
+		object.(*user.Class).StartNewService()
+	}
 }

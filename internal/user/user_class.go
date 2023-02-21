@@ -9,6 +9,7 @@ import (
 	"error_bot/internal/types"
 	"error_bot/syncgroup"
 	"fmt"
+	"github.com/gogf/gf/v2/util/gconv"
 	"log"
 	"sync"
 	"time"
@@ -27,6 +28,7 @@ type Class struct {
 	LiveFlag         bool     `json:"live_flag"`
 	DynamicFlag      bool     `json:"dynamic_flag"`
 	Groups           []*Group `json:"groups"`
+	ReadDynamicList  sync.Map `json:"read_dynamic_list"`
 }
 
 type Group struct {
@@ -228,6 +230,7 @@ func (c *Class) ListenBiliBiliSpaceNotification(ctx context.Context) {
 						c.IsExistingTop = true
 					} else {
 						c.LastDynamicId = dynamicItem.IdStr
+						c.DynamicFlag = true
 					}
 
 				} else if c.DynamicFlag {
@@ -239,29 +242,45 @@ func (c *Class) ListenBiliBiliSpaceNotification(ctx context.Context) {
 						c.IsExistingTop = true
 
 					} else { // 普通动态
-						if c.LastDynamicId != dynamicItem.IdStr {
+						if c.isNewDynamic(dynamicItem.IdStr) {
 							c.handleDynamic(dynamicInfo, i)
-							c.LastTopDynamicId = dynamicItem.IdStr
+							c.LastDynamicId = dynamicItem.IdStr
 						}
 
 						// 如果第一条是普通动态，说明没有置顶动态
 						if i == 0 {
 							c.IsExistingTop = false
+							c.LastTopDynamicId = ""
 						}
 					}
 				}
-
-				c.DynamicFlag = true
 
 				// 仅处理第一条动态
 				if c.IsExistingTop && i == 0 {
 					continue
 				} else {
+					for i, item := range dynamicInfo.Data.Items {
+						c.ReadDynamicList.Store(i, item.IdStr)
+					}
+
 					break
 				}
 			}
 		}
 	}
+}
+
+func (c *Class) isNewDynamic(id string) bool {
+	is := true
+	c.ReadDynamicList.Range(func(key, value any) bool {
+		if gconv.String(value) == id {
+			is = false
+			return false
+		}
+		return true
+	})
+
+	return is
 }
 
 func (c *Class) handleDynamic(dynamicInfo *types.SpaceInfo, index int) {

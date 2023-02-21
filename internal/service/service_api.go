@@ -58,10 +58,11 @@ func handleEvent(event *types.Event) {
 func handleMessage(event *types.Event) {
 	switch event.MessageType {
 	case "group":
-		if len(event.Message) > 5 && event.Message[:6] == "config" {
-			event.Message = strings.Replace(event.Message, "config", "", -1)
-			ReplaceServiceConfig(event)
-			return
+		if len(event.Message) > 23 && event.Message[0:21] == "[CQ:at,qq=1497312823]" {
+			event.Message = strings.Replace(event.Message, "[CQ:at,qq=1497312823]", "", -1)
+			event.Message = strings.Replace(event.Message, " ", "", -1)
+
+			bot.SendMessage(event.GroupId, "group", RequestXiaoAi(event.Message))
 		}
 
 	case "private":
@@ -70,6 +71,7 @@ func handleMessage(event *types.Event) {
 			ReplaceServiceConfig(event)
 			return
 		}
+
 		bot.SendMessage(event.Sender.UserId, "private", RequestXiaoAi(event.Message))
 	}
 }

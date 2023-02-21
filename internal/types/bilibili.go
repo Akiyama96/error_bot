@@ -216,6 +216,27 @@ type SpaceInfoItem struct {
 						Width  int           `json:"width"`
 					} `json:"items"`
 				} `json:"draw,omitempty"`
+
+				Archive struct {
+					Aid   string `json:"aid"`
+					Badge struct {
+						BgColor string `json:"bg_color"`
+						Color   string `json:"color"`
+						Text    string `json:"text"`
+					} `json:"badge"`
+					Bvid           string `json:"bvid"`
+					Cover          string `json:"cover"`
+					Desc           string `json:"desc"`
+					DisablePreview int    `json:"disable_preview"`
+					DurationText   string `json:"duration_text"`
+					JumpUrl        string `json:"jump_url"`
+					Stat           struct {
+						Danmaku string `json:"danmaku"`
+						Play    string `json:"play"`
+					} `json:"stat"`
+					Title string `json:"title"`
+					Type  int    `json:"type"`
+				} `json:"archive"`
 			} `json:"major"`
 			Topic *struct {
 				Id      int    `json:"id"`
@@ -270,7 +291,7 @@ type SpaceInfoItem struct {
 	} `json:"modules"`
 	Type    string         `json:"type"`
 	Visible bool           `json:"visible"`
-	Orig    *SpaceInfoItem `json:"orig,omitempty"`
+	Orig    *SpaceInfoItem `json:"orig"`
 }
 
 type BilibiliUserInfo struct {

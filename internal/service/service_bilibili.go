@@ -34,7 +34,7 @@ func StartBiliBiliService() {
 func CreateObject(info *types.BilibiliService) {
 	object, ok := user.Objects.Load(info.UserID)
 	if ok {
-		object.(*user.Class).Groups = append(object.(*user.Class).Groups, &user.Group{
+		object.(*user.Class).Groups.Store(info.GroupID, &user.Group{
 			Id:                info.GroupID,
 			AtAll:             info.AtAll,
 			LiveNotification:  info.LiveNotification,
@@ -47,14 +47,13 @@ func CreateObject(info *types.BilibiliService) {
 			Name:   info.Name,
 			Uid:    info.UserID,
 			RoomId: info.RoomID,
-			Groups: make([]*user.Group, 0),
 		}
 
-		newObject.Groups = append(newObject.Groups, &user.Group{
+		newObject.Groups.Store(info.GroupID, &user.Group{
 			Id:                info.GroupID,
+			AtAll:             info.AtAll,
 			LiveNotification:  info.LiveNotification,
 			SpaceNotification: info.SpaceNotification,
-			AtAll:             info.AtAll,
 		})
 
 		object = newObject

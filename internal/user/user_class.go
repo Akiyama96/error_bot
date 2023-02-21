@@ -27,7 +27,7 @@ type Class struct {
 	IsExistingTop    bool     `json:"is_existing_top"`
 	LiveFlag         bool     `json:"live_flag"`
 	DynamicFlag      bool     `json:"dynamic_flag"`
-	Groups           []*Group `json:"groups"`
+	Groups           sync.Map `json:"groups"`
 	ReadDynamicList  sync.Map `json:"read_dynamic_list"`
 }
 
@@ -133,7 +133,13 @@ func (c *Class) ListenBiliBiliLiveNotification(ctx context.Context) {
 
 // 发送开播消息到每个订阅群
 func (c *Class) sendStartLiveNotification(info *types.LiveRoomInfo) {
-	for _, group := range c.Groups {
+	c.Groups.Range(func(key, value any) bool {
+		group := value.(*Group)
+
+		if group.LiveNotification != 1 {
+			return true
+		}
+
 		message := fmt.Sprintf("%s开播啦!\n", c.Name) +
 			fmt.Sprintf("直播间标题：%s\n", info.Data.Title) +
 			fmt.Sprintf("直播间地址：https://live.bilibili.com/%d\n", info.Data.RoomId) +
@@ -145,14 +151,18 @@ func (c *Class) sendStartLiveNotification(info *types.LiveRoomInfo) {
 		}
 
 		bot.SendMessage(group.Id, "group", message)
-	}
+
+		return true
+	})
 }
 
 // 发送下播消息到每个订阅群
 func (c *Class) sendStopLiveNotification() {
-	for _, group := range c.Groups {
+	c.Groups.Range(func(key, value any) bool {
+		group := value.(*Group)
+
 		if group.LiveNotification != 1 {
-			continue
+			return true
 		}
 
 		message := fmt.Sprintf("%s下播啦!\n", c.Name) +
@@ -163,43 +173,56 @@ func (c *Class) sendStopLiveNotification() {
 				((time.Now().Unix()-c.LiveTime)%3600)%60,
 			) +
 			fmt.Sprintf("本次直播最大人气值:%d!", c.MaxHotValue)
+
 		bot.SendMessage(group.Id, "group", message)
-	}
+
+		return true
+	})
 }
 
 // 发送轮播消息到每个订阅群
 func (c *Class) sendPlayOtherVideoNotification(info *types.LiveRoomInfo) {
 	if c.LiveStatus == 0 {
-		for _, group := range c.Groups {
+		c.Groups.Range(func(key, value any) bool {
+			group := value.(*Group)
+
 			if group.LiveNotification != 1 {
-				continue
+				return true
 			}
 
 			message := fmt.Sprintf("%s正在轮播中\n", c.Name) +
 				fmt.Sprintf("直播间地址：https://live.bilibili.com/%d\n", info.Data.RoomId) +
 				fmt.Sprintf("当前人气值%d~\n", info.Data.Online) +
 				fmt.Sprintf("[CQ:image,file=%s]", info.Data.Keyframe)
+
 			bot.SendMessage(group.Id, "group", message)
-		}
+
+			return true
+		})
 
 	} else if c.LiveStatus == 1 {
-		for _, group := range c.Groups {
+		c.Groups.Range(func(key, value any) bool {
+			group := value.(*Group)
+
 			if group.LiveNotification != 1 {
-				continue
+				return true
 			}
 
 			message := fmt.Sprintf("%s下播啦!\n", c.Name) +
 				fmt.Sprintf(
 					"本次直播时间：%d小时%d分%d秒\n~~",
-					c.LiveTime/3600,
-					(c.LiveTime%3600)/60,
-					(c.LiveTime%3600)%60,
+					(time.Now().Unix()-c.LiveTime)/3600,
+					((time.Now().Unix()-c.LiveTime)%3600)/60,
+					((time.Now().Unix()-c.LiveTime)%3600)%60,
 				) +
 				fmt.Sprintf("本次直播最大人气值:%d!\n", c.MaxHotValue) +
 				fmt.Sprintf("当前直播间正在轮播中：https://live.bilibili.com/%d\n", info.Data.RoomId) +
 				fmt.Sprintf("[CQ:image,file=%s]", info.Data.Keyframe)
 			bot.SendMessage(group.Id, "group", message)
-		}
+
+			return true
+		})
+
 	}
 }
 
@@ -286,26 +309,34 @@ func (c *Class) isNewDynamic(id string) bool {
 func (c *Class) handleDynamic(dynamicInfo *types.SpaceInfo, index int) {
 	message := FormatDynamic(dynamicInfo, index)
 
-	for _, group := range c.Groups {
+	c.Groups.Range(func(key, value any) bool {
+		group := value.(*Group)
+
 		if group.SpaceNotification != 1 {
-			continue
+			return true
 		}
 
 		bot.SendMessage(group.Id, "group", message)
-	}
+
+		return true
+	})
 }
 
 func (c *Class) handleTopDynamic(dynamicInfo *types.SpaceInfo, index int) {
 	message := fmt.Sprintf("%s更新了置顶动态\n\n:", c.Name)
 	message += FormatDynamic(dynamicInfo, index)
 
-	for _, group := range c.Groups {
+	c.Groups.Range(func(key, value any) bool {
+		group := value.(*Group)
+
 		if group.SpaceNotification != 1 {
-			continue
+			return true
 		}
 
 		bot.SendMessage(group.Id, "group", message)
-	}
+
+		return true
+	})
 }
 
 func FormatDynamic(dynamicInfo *types.SpaceInfo, index int) string {
@@ -334,10 +365,16 @@ func FormatDynamic(dynamicInfo *types.SpaceInfo, index int) string {
 			message += fmt.Sprintf("%s\n", dynamic.Modules.ModuleDynamic.Desc.Text)
 		}
 
-		if dynamic.Modules.ModuleDynamic.Major != nil {
-			message += fmt.Sprintf("\n%s\n", dynamic.Modules.ModuleDynamic.Major.Article.Title) +
-				fmt.Sprintf("视频地址:https:%s\n", dynamic.Modules.ModuleDynamic.Major.Article.JumpUrl) +
-				fmt.Sprintf("[CQ:image,file=%s]", dynamic.Modules.ModuleDynamic.Major.Article.Cover)
+		if dynamic.Modules.ModuleDynamic.Major.Article.Title == "" && dynamic.Modules.ModuleDynamic.Major.Article.Id == 0 {
+			message += fmt.Sprintf("\n%s\n", dynamic.Modules.ModuleDynamic.Major.Archive.Title) +
+				fmt.Sprintf("视频地址:https:%s\n", dynamic.Modules.ModuleDynamic.Major.Archive.JumpUrl) +
+				fmt.Sprintf("[CQ:image,file=%s]", dynamic.Modules.ModuleDynamic.Major.Archive.Cover)
+		} else {
+			if dynamic.Modules.ModuleDynamic.Major != nil {
+				message += fmt.Sprintf("\n%s\n", dynamic.Modules.ModuleDynamic.Major.Article.Title) +
+					fmt.Sprintf("视频地址:https:%s\n", dynamic.Modules.ModuleDynamic.Major.Article.JumpUrl) +
+					fmt.Sprintf("[CQ:image,file=%s]", dynamic.Modules.ModuleDynamic.Major.Article.Cover)
+			}
 		}
 
 	case "DYNAMIC_TYPE_DRAW":

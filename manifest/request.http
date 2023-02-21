@@ -21,7 +21,7 @@ Content-Type: application/json
 GET https://api.live.bilibili.com/room/v1/Room/get_info?room_id=26088559
 
 ###获取用户动态
-GET https://api.bilibili.com/x/polymer/web-dynamic/v1/feed/space?offset=&host_mid=387636363&timezone_offset=-480
+GET https://api.bilibili.com/x/polymer/web-dynamic/v1/feed/space?offset=&host_mid=13874847&timezone_offset=-480
 
 ###获取用户信息
 GET https://api.bilibili.com/x/relation/stat?vmid=387636363&jsonp=jsonp

@@ -29,6 +29,6 @@ http:
 
 # qq_bot服务配置
 bot:
-  address: "124.223.113.24"       # http服务地址
+  address: "127.0.0.1"       # http服务地址
   port: 5700                 # http端口
   qq: 1131568220             # 通知到的qq

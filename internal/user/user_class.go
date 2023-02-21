@@ -158,9 +158,9 @@ func (c *Class) sendStopLiveNotification() {
 		message := fmt.Sprintf("%s下播啦!\n", c.Name) +
 			fmt.Sprintf(
 				"本次直播时间：%d小时%d分%d秒\n~~",
-				c.LiveTime/3600,
-				(c.LiveTime%3600)/60,
-				(c.LiveTime%3600)%60,
+				(time.Now().Unix()-c.LiveTime)/(60*60*60),
+				((time.Now().Unix()-c.LiveTime)%3600)/60,
+				((time.Now().Unix()-c.LiveTime)%3600)%60,
 			) +
 			fmt.Sprintf("本次直播最大人气值:%d!", c.MaxHotValue)
 		bot.SendMessage(group.Id, "group", message)

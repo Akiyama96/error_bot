@@ -64,7 +64,12 @@ func handleMessage(event *types.Event) {
 			event.Message = strings.Replace(event.Message, " ", "", -1)
 
 			bot.SendMessage(event.GroupId, "group", RequestXiaoAi(event.Message))
-			bot.SendMessage(config.Content.BotServerConfig.QQ, "private", event.Message)
+			bot.SendMessage(config.Content.BotServerConfig.QQ, "private", fmt.Sprintf(
+				"群聊(%d)\n%s向你发送了消息:\n%s",
+				event.GroupId,
+				event.Sender.Nickname,
+				event.Message,
+			))
 		}
 
 	case "private":
@@ -75,7 +80,11 @@ func handleMessage(event *types.Event) {
 		}
 
 		bot.SendMessage(event.Sender.UserId, "private", RequestXiaoAi(event.Message))
-		bot.SendMessage(config.Content.BotServerConfig.QQ, "private", event.Message)
+		bot.SendMessage(config.Content.BotServerConfig.QQ, "private", fmt.Sprintf(
+			"%s向你发送了消息:\n%s",
+			event.Sender.Nickname,
+			event.Message,
+		))
 	}
 }
 

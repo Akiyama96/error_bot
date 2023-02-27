@@ -28,3 +28,6 @@ GET https://api.bilibili.com/x/relation/stat?vmid=387636363&jsonp=jsonp
 
 ###获取用户信息info
 GET https://api.bilibili.com/x/web-interface/card?mid=387636363
+
+###
+GET https://api.bilibili.com/x/relation/followings?vmid=13874847&ps=100&pn=2

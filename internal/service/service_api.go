@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"encoding/json"
+	"error_bot/config"
 	"error_bot/internal/bot"
 	"error_bot/internal/types"
 	"error_bot/internal/units"
@@ -63,6 +64,7 @@ func handleMessage(event *types.Event) {
 			event.Message = strings.Replace(event.Message, " ", "", -1)
 
 			bot.SendMessage(event.GroupId, "group", RequestXiaoAi(event.Message))
+			bot.SendMessage(config.Content.BotServerConfig.QQ, "private", event.Message)
 		}
 
 	case "private":
@@ -73,6 +75,7 @@ func handleMessage(event *types.Event) {
 		}
 
 		bot.SendMessage(event.Sender.UserId, "private", RequestXiaoAi(event.Message))
+		bot.SendMessage(config.Content.BotServerConfig.QQ, "private", event.Message)
 	}
 }
 
